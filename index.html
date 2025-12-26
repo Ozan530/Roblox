@@ -3,124 +3,53 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mini 2.5D Roblox VR Hissi</title>
+<title>A? Oyunu</title>
 <style>
-body { margin:0; overflow:hidden; cursor:none; }
-canvas { display:block; }
-#score { position:absolute; top:10px; left:10px; font-size:20px; color:white; z-index:100; }
-#instructions {
-  position:absolute; top:50%; width:100%; text-align:center;
-  font-size:20px; color:white; cursor:pointer;
-}
+body { margin:0; overflow:hidden; background:#222; display:flex; justify-content:center; align-items:center; height:100vh; color:white; font-family:sans-serif; }
+#game { text-align:center; }
+#events { margin-top:20px; font-size:24px; }
+button { padding:20px 40px; font-size:32px; cursor:pointer; }
 </style>
 </head>
 <body>
-<div id="score">Puan: 0</div>
-<div id="instructions">Tıklayın ve VR hissini yaşayın. WASD ile hareket edin.</div>
-
-<script src="https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/controls/PointerLockControls.js"></script>
+<div id="game">
+  <button id="aBtn">A?</button>
+  <div id="events">Hazır mısın?</div>
+</div>
 
 <script>
-// Scene ve renderer
-let scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87ceeb);
-let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-let renderer = new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+// Rastgele olaylar
+const events = [
+  "Karakter havaya fırladı! 🚀",
+  "Bir kurabiye patladı! 🍪💥",
+  "Müzik açıldı! 🎵",
+  "Ekran sallandı! 🌪️",
+  "Bir köpek çıktı! 🐶",
+  "Gizli altın bulundu! ✨",
+  "Patlayan confetti! 🎉",
+  "Oyuncu şaşırdı! 😱"
+];
 
-// ışık
-let light = new THREE.DirectionalLight(0xffffff,1);
-light.position.set(10,20,10);
-scene.add(light);
+const eventDiv = document.getElementById('events');
+const btn = document.getElementById('aBtn');
 
-// zemin
-let floorGeo = new THREE.BoxGeometry(50,1,50);
-let floorMat = new THREE.MeshStandardMaterial({color:0x228B22});
-let floor = new THREE.Mesh(floorGeo,floorMat);
-floor.position.y=-0.5;
-scene.add(floor);
+btn.addEventListener('click', ()=>{
+  // Rastgele olay seç
+  const ev = events[Math.floor(Math.random()*events.length)];
+  eventDiv.textContent = ev;
 
-// karakter
-let playerGeo = new THREE.BoxGeometry(1,2,1);
-let playerMat = new THREE.MeshStandardMaterial({color:0xff0000});
-let player = new THREE.Mesh(playerGeo,playerMat);
-player.position.y=1;
-scene.add(player);
+  // Basit animasyon: ekran titreme
+  if(ev.includes("sallandı")){
+    document.body.style.transform="translate("+ (Math.random()*10-5) +"px,"+ (Math.random()*10-5) +"px)";
+    setTimeout(()=>{ document.body.style.transform=""; },200);
+  }
 
-// toplama nesneleri
-let collectibles = [];
-for(let i=0;i<5;i++){
-  let geo = new THREE.SphereGeometry(0.5,16,16);
-  let mat = new THREE.MeshStandardMaterial({color:0xffff00});
-  let sphere = new THREE.Mesh(geo,mat);
-  sphere.position.set(Math.random()*40-20,0.5,Math.random()*40-20);
-  scene.add(sphere);
-  collectibles.push(sphere);
-}
-
-// skor
-let score=0;
-const scoreDiv=document.getElementById('score');
-
-// Pointer Lock Controls (fare kitlendi ve görünmez)
-let controls = new THREE.PointerLockControls(camera, document.body);
-document.getElementById('instructions').addEventListener('click', ()=>{
-  controls.lock();
-  document.getElementById('instructions').style.display='none';
+  // Ses efektleri (opsiyonel)
+  if(ev.includes("Müzik")){
+    const audio = new Audio('https://www.soundjay.com/button/sounds/button-3.mp3');
+    audio.play();
+  }
 });
-
-// hareket
-let move={forward:false,back:false,left:false,right:false};
-document.addEventListener('keydown', e=>{
-  if(e.key==='w') move.forward=true;
-  if(e.key==='s') move.back=true;
-  if(e.key==='a') move.left=true;
-  if(e.key==='d') move.right=true;
-});
-document.addEventListener('keyup', e=>{
-  if(e.key==='w') move.forward=false;
-  if(e.key==='s') move.back=false;
-  if(e.key==='a') move.left=false;
-  if(e.key==='d') move.right=false;
-});
-
-// resize
-window.addEventListener('resize', ()=>{
-  camera.aspect = window.innerWidth/window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-// animasyon
-function animate(){
-  requestAnimationFrame(animate);
-
-  // hareket
-  let speed=0.2;
-  if(move.forward) player.position.z -= speed;
-  if(move.back) player.position.z += speed;
-  if(move.left) player.position.x -= speed;
-  if(move.right) player.position.x += speed;
-
-  // kamera oyuncunun pozisyonunda
-  camera.position.set(player.position.x, player.position.y+1, player.position.z);
-
-  // toplama kontrolü
-  collectibles = collectibles.filter(c=>{
-    if(c.position.distanceTo(player.position)<1){
-      score++;
-      scoreDiv.textContent="Puan: "+score;
-      scene.remove(c);
-      return false;
-    }
-    return true;
-  });
-
-  renderer.render(scene,camera);
-}
-animate();
 </script>
 </body>
 </html>
