@@ -3,83 +3,66 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lucky Block ? Efekti</title>
+<title>Lucky Block Tıklama Oyunu</title>
 <style>
 body { margin:0; display:flex; justify-content:center; align-items:center; height:100vh; background:#222; font-family:sans-serif; color:white; overflow:hidden;}
-#game { text-align:center; position:relative; }
+#game { text-align:center; }
 #luckyBlock { width:100px; height:100px; background:yellow; display:flex; justify-content:center; align-items:center; font-size:32px; cursor:pointer; border:3px solid orange; user-select:none; position:relative;}
-#events { margin-top:20px; font-size:20px; min-height:30px; }
-.effect { position:absolute; font-size:32px; pointer-events:none; color:yellow; animation:rise 1s ease-out forwards;}
+#score { margin-top:20px; font-size:24px; }
+.effect { position:absolute; font-size:24px; color:yellow; pointer-events:none; animation:rise 1s ease-out forwards;}
 @keyframes rise {
-  0% {opacity:1; transform:translate(0,0);}
-  100% {opacity:0; transform:translate(0,-100px);}
+  0% {opacity:1; transform:translateY(0);}
+  100% {opacity:0; transform:translateY(-50px);}
 }
 </style>
 </head>
 <body>
 <div id="game">
   <div id="luckyBlock">🎁</div>
-  <div id="events">Lucky Block'u tıkla!</div>
+  <div id="score">Tıklamalar: 0 | Ödül: 0</div>
 </div>
 
 <script>
-const events = [
-  "Roblox karakteri patladı! 🟦",
-  "Forsaken canavarı çıktı! 👹",
-  "Altın buldun! 💰",
-  "Patlayan confetti! 🎉",
-  "Kurabiye yağmuru! 🍪",
-  "Ekran sallandı! 🌪️",
-  "Gizli loot bulundu! 💎",
-  "Oyuncu şaşırdı! 😱",
-  "Roblox'ta dans ediyor! 💃🕺",
-  "Şanssızlık! Blok patladı! 💥"
-];
+let clicks = 0;
+let rewards = 0;
 
 const block = document.getElementById('luckyBlock');
-const eventDiv = document.getElementById('events');
+const scoreDiv = document.getElementById('score');
 
-// Bloğun etrafında sürekli çıkan ? efektleri
-function spawnAroundBlock() {
+// Tıklama ve ödül sistemi
+block.addEventListener('click', ()=>{
+  clicks++;
+
+  // Rastgele ödül: 50% altın, 50% ekstra tıklama
+  let rewardType = Math.random() > 0.5 ? 'altın' : 'extra';
+  if(rewardType === 'altın'){
+    rewards++;
+    showEffect('💰');
+  } else {
+    clicks++;
+    showEffect('✨');
+  }
+
+  scoreDiv.textContent = `Tıklamalar: ${clicks} | Ödül: ${rewards}`;
+});
+
+// Efekt göstermek
+function showEffect(sym){
   const span = document.createElement('span');
   span.className = 'effect';
-  span.textContent = '?';
-  const rect = block.getBoundingClientRect();
-  const offsetX = Math.random()*100-50;
-  const offsetY = Math.random()*100-50;
-  span.style.left = (rect.left + rect.width/2 + offsetX) + 'px';
-  span.style.top = (rect.top + rect.height/2 + offsetY) + 'px';
+  span.textContent = sym;
+  span.style.left = (window.innerWidth/2 + (Math.random()*100-50)) + 'px';
+  span.style.top = (window.innerHeight/2 + (Math.random()*100-50)) + 'px';
   document.body.appendChild(span);
   setTimeout(()=>{span.remove();},1000);
 }
-setInterval(spawnAroundBlock, 300);
-
-// Lucky Block tıklandığında
-block.addEventListener('click', ()=>{
-  const ev = events[Math.floor(Math.random()*events.length)];
-  eventDiv.textContent = ev;
-
-  // Rastgele ek ? / efekt
-  const span = document.createElement('span');
-  span.className='effect';
-  span.textContent = Math.random()>0.5 ? '?' : '!';
-  span.style.left = Math.random()*window.innerWidth + 'px';
-  span.style.top = Math.random()*window.innerHeight + 'px';
-  document.body.appendChild(span);
-  setTimeout(()=>{span.remove();},1000);
-
-  // Ekran sallama
-  if(ev.includes("sallandı") || ev.includes("patladı")){
-    document.body.style.transform="translate("+ (Math.random()*20-10) +"px,"+ (Math.random()*20-10) +"px)";
-    setTimeout(()=>{ document.body.style.transform=""; },300);
-  }
-
-  // Ses efekti
-  if(ev.includes("Altın") || ev.includes("loot")){
-    const audio = new Audio('https://www.soundjay.com/button/sounds/button-3.mp3');
-    audio.play();
-  }
-});
 </script>
 </body>
 </html>
+
+
+
+
+
+// 67
+67
