@@ -5,53 +5,130 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mini 2.5D Roblox</title>
 <style>
-  body { margin: 0; overflow: hidden; }
-  canvas { display: block; }
+  body { margin:0; overflow:hidden; }
+  canvas { display:block; }
+  #score { position:absolute; top:10px; left:10px; font-size:20px; color:white; z-index:100; }
 </style>
 </head>
 <body>
+<div id="score">Puan: 0</div>
 <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/controls/PointerLockControls.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <script>
+// Firebase setup (kendi configini ekle)
+const firebaseConfig = {
+  apiKey: "FIREBASE_API_KEY",
+  authDomain: "PROJECT_ID.firebaseapp.com",
+  databaseURL: "https://PROJECT_ID.firebaseio.com",
+  projectId: "PROJECT_ID",
+  storageBucket: "PROJECT_ID.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// Scene
 let scene = new THREE.Scene();
+scene.background = new THREE.Color(0x87ceeb);
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-let renderer = new THREE.WebGLRenderer({antialias: true});
+let renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 // ışık
 let light = new THREE.DirectionalLight(0xffffff, 1);
-light.position.set(10,10,10);
+light.position.set(10,20,10);
 scene.add(light);
 
 // zemin
-let floorGeometry = new THREE.BoxGeometry(50, 1, 50);
-let floorMaterial = new THREE.MeshStandardMaterial({color: 0x00ff00});
-let floor = new THREE.Mesh(floorGeometry, floorMaterial);
+let floorGeo = new THREE.BoxGeometry(50,1,50);
+let floorMat = new THREE.MeshStandardMaterial({color:0x228B22});
+let floor = new THREE.Mesh(floorGeo,floorMat);
 floor.position.y = -0.5;
 scene.add(floor);
 
 // karakter
-let playerGeometry = new THREE.BoxGeometry(1,2,1);
-let playerMaterial = new THREE.MeshStandardMaterial({color: 0xff0000});
-let player = new THREE.Mesh(playerGeometry, playerMaterial);
+let playerGeo = new THREE.BoxGeometry(1,2,1);
+let playerMat = new THREE.MeshStandardMaterial({color:0xff0000});
+let player = new THREE.Mesh(playerGeo,playerMat);
 player.position.y = 1;
 scene.add(player);
 
-camera.position.set(5,5,10);
-camera.lookAt(player.position);
+// engeller / objeler
+let obstacles = [];
+for(let i=0;i<5;i++){
+  let geo = new THREE.BoxGeometry(2,2,2);
+  let mat = new THREE.MeshStandardMaterial({color:0x8B4513});
+  let box = new THREE.Mesh(geo,mat);
+  box.position.set(Math.random()*40-20,1,Math.random()*40-20);
+  scene.add(box);
+  obstacles.push(box);
+}
 
-// kontrol
-document.addEventListener('keydown', (e)=>{
-  const speed = 0.2;
-  if(e.key === 'w') player.position.z -= speed;
-  if(e.key === 's') player.position.z += speed;
-  if(e.key === 'a') player.position.x -= speed;
-  if(e.key === 'd') player.position.x += speed;
+// toplanabilir nesneler
+let collectibles = [];
+for(let i=0;i<5;i++){
+  let geo = new THREE.SphereGeometry(0.5,16,16);
+  let mat = new THREE.MeshStandardMaterial({color:0xffff00});
+  let sphere = new THREE.Mesh(geo,mat);
+  sphere.position.set(Math.random()*40-20,0.5,Math.random()*40-20);
+  scene.add(sphere);
+  collectibles.push(sphere);
+}
+
+let score = 0;
+const scoreDiv = document.getElementById('score');
+
+// pointer lock controls
+let controls = new THREE.PointerLockControls(camera, document.body);
+document.body.addEventListener('click', ()=>controls.lock());
+camera.position.set(0,2,5);
+
+// hareket
+let move = {forward:false,back:false,left:false,right:false};
+document.addEventListener('keydown',(e)=>{
+  if(e.key==='w') move.forward=true;
+  if(e.key==='s') move.back=true;
+  if(e.key==='a') move.left=true;
+  if(e.key==='d') move.right=true;
+});
+document.addEventListener('keyup',(e)=>{
+  if(e.key==='w') move.forward=false;
+  if(e.key==='s') move.back=false;
+  if(e.key==='a') move.left=false;
+  if(e.key==='d') move.right=false;
 });
 
-// render loop
-function animate() {
+// animasyon
+function animate(){
   requestAnimationFrame(animate);
+
+  // karakter hareketi
+  let speed = 0.2;
+  if(move.forward) player.position.z -= speed;
+  if(move.back) player.position.z += speed;
+  if(move.left) player.position.x -= speed;
+  if(move.right) player.position.x += speed;
+
+  // kamera oyuncuya
+  camera.position.set(player.position.x, player.position.y+1, player.position.z);
+
+  // toplama kontrolü
+  collectibles.forEach((c,i)=>{
+    if(c.position.distanceTo(player.position)<1){
+      score++;
+      scoreDiv.textContent = "Puan: "+score;
+      scene.remove(c);
+      collectibles.splice(i,1);
+      // Firebase puan güncelle (çok oyunculu)
+      db.ref('players/player1').set({x:player.position.x, y:player.position.y, z:player.position.z, score:score});
+    }
+  });
+
   renderer.render(scene,camera);
 }
 animate();
