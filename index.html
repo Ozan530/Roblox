@@ -3,16 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mini 2.5D Roblox Basit</title>
+<title>Mini 2.5D Roblox VR Hissi</title>
 <style>
-body { margin:0; overflow:hidden; }
+body { margin:0; overflow:hidden; cursor:none; }
 canvas { display:block; }
 #score { position:absolute; top:10px; left:10px; font-size:20px; color:white; z-index:100; }
+#instructions {
+  position:absolute; top:50%; width:100%; text-align:center;
+  font-size:20px; color:white; cursor:pointer;
+}
 </style>
 </head>
 <body>
 <div id="score">Puan: 0</div>
+<div id="instructions">Tıklayın ve VR hissini yaşayın. WASD ile hareket edin.</div>
+
 <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/controls/PointerLockControls.js"></script>
 
 <script>
 // Scene ve renderer
@@ -32,14 +39,14 @@ scene.add(light);
 let floorGeo = new THREE.BoxGeometry(50,1,50);
 let floorMat = new THREE.MeshStandardMaterial({color:0x228B22});
 let floor = new THREE.Mesh(floorGeo,floorMat);
-floor.position.y = -0.5;
+floor.position.y=-0.5;
 scene.add(floor);
 
 // karakter
 let playerGeo = new THREE.BoxGeometry(1,2,1);
 let playerMat = new THREE.MeshStandardMaterial({color:0xff0000});
 let player = new THREE.Mesh(playerGeo,playerMat);
-player.position.y = 1;
+player.position.y=1;
 scene.add(player);
 
 // toplama nesneleri
@@ -55,13 +62,13 @@ for(let i=0;i<5;i++){
 
 // skor
 let score=0;
-const scoreDiv = document.getElementById('score');
+const scoreDiv=document.getElementById('score');
 
-// mouse ile bakış
-let mouseX=0, mouseY=0;
-document.addEventListener('mousemove', e=>{
-  mouseX = (e.clientX/window.innerWidth -0.5)*2;
-  mouseY = (e.clientY/window.innerHeight -0.5)*2;
+// Pointer Lock Controls (fare kitlendi ve görünmez)
+let controls = new THREE.PointerLockControls(camera, document.body);
+document.getElementById('instructions').addEventListener('click', ()=>{
+  controls.lock();
+  document.getElementById('instructions').style.display='none';
 });
 
 // hareket
@@ -97,11 +104,10 @@ function animate(){
   if(move.left) player.position.x -= speed;
   if(move.right) player.position.x += speed;
 
-  // kamera konum ve bakış
-  camera.position.set(player.position.x, player.position.y+1, player.position.z+5);
-  camera.lookAt(player.position.x + mouseX*5, player.position.y + mouseY*2, player.position.z);
+  // kamera oyuncunun pozisyonunda
+  camera.position.set(player.position.x, player.position.y+1, player.position.z);
 
-  // toplama
+  // toplama kontrolü
   collectibles = collectibles.filter(c=>{
     if(c.position.distanceTo(player.position)<1){
       score++;
