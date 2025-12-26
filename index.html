@@ -3,53 +3,51 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>A? Oyunu</title>
+<title>Lucky Block Oyunu</title>
 <style>
-body { margin:0; overflow:hidden; background:#222; display:flex; justify-content:center; align-items:center; height:100vh; color:white; font-family:sans-serif; }
+body { margin:0; display:flex; justify-content:center; align-items:center; height:100vh; background:#222; font-family:sans-serif; color:white; overflow:hidden;}
 #game { text-align:center; }
-#events { margin-top:20px; font-size:24px; }
-button { padding:20px 40px; font-size:32px; cursor:pointer; }
+#luckyBlock { width:100px; height:100px; background:yellow; display:flex; justify-content:center; align-items:center; font-size:32px; cursor:pointer; border:3px solid orange; user-select:none;}
+#events { margin-top:20px; font-size:20px; min-height:30px; }
 </style>
 </head>
 <body>
 <div id="game">
-  <button id="aBtn">A?</button>
-  <div id="events">Hazır mısın?</div>
+  <div id="luckyBlock">🎁</div>
+  <div id="events">Lucky Block'u tıkla!</div>
 </div>
 
 <script>
-// Rastgele olaylar
+// Olası rastgele olaylar
 const events = [
-  "Karakter havaya fırladı! 🚀",
-  "Bir kurabiye patladı! 🍪💥",
-  "Müzik açıldı! 🎵",
-  "Ekran sallandı! 🌪️",
-  "Bir köpek çıktı! 🐶",
-  "Gizli altın bulundu! ✨",
-  "Patlayan confetti! 🎉",
-  "Oyuncu şaşırdı! 😱",
   "Roblox karakteri patladı! 🟦",
   "Forsaken canavarı çıktı! 👹",
-  "Roblox’ta dans ediyor! 💃🕺",
-  "Forsaken loot buldu! 💎"
+  "Altın buldun! 💰",
+  "Patlayan confetti! 🎉",
+  "Kurabiye yağmuru! 🍪",
+  "Ekran sallandı! 🌪️",
+  "Gizli loot bulundu! 💎",
+  "Oyuncu şaşırdı! 😱",
+  "Roblox'ta dans ediyor! 💃🕺",
+  "Şanssızlık! Blok patladı! 💥"
 ];
 
+const block = document.getElementById('luckyBlock');
 const eventDiv = document.getElementById('events');
-const btn = document.getElementById('aBtn');
 
-btn.addEventListener('click', ()=>{
+block.addEventListener('click', ()=>{
   // Rastgele olay seç
   const ev = events[Math.floor(Math.random()*events.length)];
   eventDiv.textContent = ev;
 
-  // Basit animasyon: ekran titreme
-  if(ev.includes("sallandı")){
-    document.body.style.transform="translate("+ (Math.random()*10-5) +"px,"+ (Math.random()*10-5) +"px)";
-    setTimeout(()=>{ document.body.style.transform=""; },200);
+  // Basit animasyon: ekran sallama
+  if(ev.includes("sallandı") || ev.includes("patladı")){
+    document.body.style.transform="translate("+ (Math.random()*20-10) +"px,"+ (Math.random()*20-10) +"px)";
+    setTimeout(()=>{ document.body.style.transform=""; },300);
   }
 
-  // Ses efektleri (opsiyonel)
-  if(ev.includes("Müzik")){
+  // Ses efekti
+  if(ev.includes("Altın") || ev.includes("loot")){
     const audio = new Audio('https://www.soundjay.com/button/sounds/button-3.mp3');
     audio.play();
   }
